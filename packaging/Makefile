@@ -58,7 +58,9 @@ wheels:
 	$(PYTHON) -m pip download --quiet --only-binary=:all: \
 	  $(WHEEL_PLATS) --python-version 312 \
 	  -d $(STAGE)/wheels pip setuptools wheel
-	$(PYTHON) -m pip wheel --quiet --no-deps -w $(STAGE)/wheels ./ovox
+	rm -rf build/ovox-src && mkdir -p build && cp -R ovox build/ovox-src
+	$(PYTHON) -m pip wheel --quiet --no-deps -w $(STAGE)/wheels ./build/ovox-src
+	rm -rf build/ovox-src
 
 clean:
 	rm -rf build frontend/dist
