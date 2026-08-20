@@ -1,0 +1,21 @@
+#!/bin/bash
+# Shipped by the openvox-gui package.
+#
+# Launcher for the openvox-gui backend: assembles the uvicorn command
+# line from the environment (systemd loads /opt/openvox-gui/config/.env
+# via EnvironmentFile) so the systemd unit can stay static.
+set -euo pipefail
+
+cd /opt/openvox-gui/backend
+
+ARGS=(app.main:app
+  --host "${OPENVOX_GUI_APP_HOST:-0.0.0.0}"
+  --port "${OPENVOX_GUI_APP_PORT:-4567}"
+  --workers "${OPENVOX_GUI_UVICORN_WORKERS:-2}")
+
+if [ "${OPENVOX_GUI_SSL_ENABLED:-false}" = "true" ]; then
+  ARGS+=(--ssl-certfile "${OPENVOX_GUI_SSL_CERT_PATH}"
+    --ssl-keyfile "${OPENVOX_GUI_SSL_KEY_PATH}")
+fi
+
+exec /opt/openvox-gui/venv/bin/uvicorn "${ARGS[@]}"

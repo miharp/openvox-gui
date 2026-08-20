@@ -1,0 +1,98 @@
+# nfpm configuration for openvox-gui OS packages.
+# Version and arch come from the environment (see Makefile):
+#   PKG_VERSION  from the VERSION file
+#   PKG_ARCH     amd64 | arm64 (nfpm goarch names)
+name: openvox-gui
+arch: ${PKG_ARCH}
+platform: linux
+version: ${PKG_VERSION}
+release: "1"
+section: admin
+maintainer: Michael Harp <mike@mikeharp.com>
+vendor: OpenVox GUI
+homepage: https://github.com/cvquesty/openvox-gui
+license: Apache-2.0
+description: |-
+  Web management console for OpenVox/Puppet infrastructure.
+
+  Dashboards, certificate authority management, Bolt orchestration, PQL
+  queries and report browsing, served from the OpenVox Server. Installing
+  the package changes no configuration; run openvox-gui-setup once to
+  configure and start the service.
+
+contents:
+  # Application tree (backend sources, CI-built frontend dist, scripts,
+  # maintenance pages, VERSION) assembled by the Makefile.
+  - src: build/stage/opt/openvox-gui
+    dst: /opt/openvox-gui
+    type: tree
+
+  # Vendored wheels for the offline virtualenv build in %post.
+  - src: build/stage/wheels
+    dst: /usr/share/openvox-gui/wheels
+    type: tree
+
+  - src: packaging/bin/openvox-gui-server
+    dst: /opt/openvox-gui/bin/openvox-gui-server
+    file_info:
+      mode: 0755
+  - src: packaging/bin/openvox-gui-setup
+    dst: /usr/bin/openvox-gui-setup
+    file_info:
+      mode: 0755
+  - src: packaging/openvox-gui.service
+    dst: /usr/lib/systemd/system/openvox-gui.service
+  - src: packaging/env.example
+    dst: /opt/openvox-gui/config/env.example
+
+  # Runtime directories, owned by the service user (created in %pre).
+  - dst: /opt/openvox-gui/config
+    type: dir
+    file_info:
+      mode: 0750
+      owner: puppet
+      group: puppet
+  - dst: /opt/openvox-gui/data
+    type: dir
+    file_info:
+      mode: 0750
+      owner: puppet
+      group: puppet
+  - dst: /opt/openvox-gui/data/reports
+    type: dir
+    file_info:
+      mode: 0750
+      owner: puppet
+      group: puppet
+  - dst: /opt/openvox-gui/logs
+    type: dir
+    file_info:
+      mode: 0750
+      owner: puppet
+      group: puppet
+
+scripts:
+  preinstall: packaging/scripts/preinstall.sh
+  postinstall: packaging/scripts/postinstall.sh
+  postremove: packaging/scripts/postremove.sh
+
+overrides:
+  rpm:
+    depends:
+      # EL10's python3 is 3.12; on EL8/EL9 install the python3.12
+      # package alongside (postinstall prefers python3.12 when present).
+      - python3 >= 3.10
+      - shadow-utils
+      - diffutils
+  deb:
+    depends:
+      - python3 (>= 3.10)
+      - python3-venv
+      - passwd
+      - diffutils
+
+rpm:
+  group: Applications/System
+deb:
+  fields:
+    Bugs: https://github.com/cvquesty/openvox-gui/issues

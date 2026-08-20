@@ -1,0 +1,20 @@
+[Unit]
+Description=OpenVox GUI - Puppet Management Web Interface
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=exec
+User=puppet
+Group=puppet
+WorkingDirectory=/opt/openvox-gui/backend
+# Keeps runtime bytecode out of the package-owned app tree, so rpm/dpkg
+# erase leaves no unowned files behind.
+Environment=PYTHONDONTWRITEBYTECODE=1
+EnvironmentFile=/opt/openvox-gui/config/.env
+ExecStart=/opt/openvox-gui/bin/openvox-gui-server
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
