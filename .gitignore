@@ -36,3 +36,6 @@ backend/venv/
 
 # Internal audit reports -- never commit to public repo until findings are remediated
 docs/audits/
+
+# packaging build output
+/build/

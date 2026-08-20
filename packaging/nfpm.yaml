@@ -79,9 +79,10 @@ scripts:
 overrides:
   rpm:
     depends:
-      # EL10's python3 is 3.12; on EL8/EL9 install the python3.12
-      # package alongside (postinstall prefers python3.12 when present).
-      - python3 >= 3.10
+      # One rpm serves EL9 and EL10: EL9's python3.12 AppStream package
+      # provides "python3.12", and EL10's default python3 (= 3.12) also
+      # provides "python3.12" — dnf resolves the right one on each.
+      - python3.12
       - shadow-utils
       - diffutils
   deb:

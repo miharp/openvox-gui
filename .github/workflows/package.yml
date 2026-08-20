@@ -1,0 +1,86 @@
+name: Package
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - packaging
+
+concurrency:
+  group: package-${{ github.ref_name }}
+  cancel-in-progress: true
+
+jobs:
+  frontend:
+    name: Build frontend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Build
+        run: cd frontend && npm install --no-audit --no-fund && npm run build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: frontend/dist
+          if-no-files-found: error
+
+  package:
+    name: Package ${{ matrix.format }} ${{ matrix.arch }}
+    needs: frontend
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        format: [rpm, deb]
+        arch: [amd64, arm64]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: frontend-dist
+          path: frontend/dist
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install nfpm
+        run: |
+          NFPM_VER=$(curl -s https://api.github.com/repos/goreleaser/nfpm/releases/latest | grep -o '"tag_name": *"[^"]*"' | cut -d'"' -f4)
+          curl -sL "https://github.com/goreleaser/nfpm/releases/download/${NFPM_VER}/nfpm_${NFPM_VER#v}_Linux_x86_64.tar.gz" | sudo tar -xz -C /usr/local/bin nfpm
+      - name: Build package
+        run: make -f packaging/Makefile package PKG_FORMAT=${{ matrix.format }} PKG_ARCH=${{ matrix.arch }} PYTHON=python3.12
+      - uses: actions/upload-artifact@v4
+        with:
+          name: openvox-gui-${{ matrix.format }}-${{ matrix.arch }}
+          path: build/out/*
+          if-no-files-found: error
+
+  install-test:
+    name: Install test ${{ matrix.image }}
+    needs: package
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - image: almalinux:9
+            artifact: openvox-gui-rpm-amd64
+            glob: '*.rpm'
+          - image: almalinux:10
+            artifact: openvox-gui-rpm-amd64
+            glob: '*.rpm'
+          - image: ubuntu:24.04
+            artifact: openvox-gui-deb-amd64
+            glob: '*.deb'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: build/out
+      - name: Run install test
+        run: |
+          PKG=$(ls build/out/${{ matrix.glob }} | head -1)
+          bash packaging/test-install.sh "${{ matrix.image }}" "$PKG"
