@@ -11,9 +11,10 @@ IMAGE="almalinux:10"
 
 docker run --rm -v "$PWD":/src -w /src "$IMAGE" bash -euo pipefail -c "
   dnf -y -q install python3 python3-pip nodejs npm git make tar >/dev/null
-  # nfpm: fetch the latest release binary for the build host arch
+  # nfpm: pinned version (resolving 'latest' via the API is
+  # anonymous-rate-limited and flaky)
   NFPM_ARCH=\$( [ \"\$(uname -m)\" = 'aarch64' ] && echo arm64 || echo x86_64 )
-  NFPM_VER=\$(curl -s https://api.github.com/repos/goreleaser/nfpm/releases/latest | grep -o '\"tag_name\": *\"[^\"]*\"' | cut -d'\"' -f4)
-  curl -sL \"https://github.com/goreleaser/nfpm/releases/download/\${NFPM_VER}/nfpm_\${NFPM_VER#v}_Linux_\${NFPM_ARCH}.tar.gz\" | tar -xz -C /usr/local/bin nfpm
+  NFPM_VER=v2.47.0
+  curl -sfL \"https://github.com/goreleaser/nfpm/releases/download/\${NFPM_VER}/nfpm_\${NFPM_VER#v}_Linux_\${NFPM_ARCH}.tar.gz\" | tar -xz -C /usr/local/bin nfpm
   make -f packaging/Makefile package PKG_FORMAT=$FORMAT PKG_ARCH=$ARCH PYTHON=python3
 "

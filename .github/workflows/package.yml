@@ -46,9 +46,12 @@ jobs:
         with:
           python-version: '3.12'
       - name: Install nfpm
+        # Pinned: resolving "latest" via the API is anonymous-rate-limited
+        # on shared runners and fails intermittently.
         run: |
-          NFPM_VER=$(curl -s https://api.github.com/repos/goreleaser/nfpm/releases/latest | grep -o '"tag_name": *"[^"]*"' | cut -d'"' -f4)
-          curl -sL "https://github.com/goreleaser/nfpm/releases/download/${NFPM_VER}/nfpm_${NFPM_VER#v}_Linux_x86_64.tar.gz" | sudo tar -xz -C /usr/local/bin nfpm
+          NFPM_VER=v2.47.0
+          curl -sfL "https://github.com/goreleaser/nfpm/releases/download/${NFPM_VER}/nfpm_${NFPM_VER#v}_Linux_x86_64.tar.gz" | sudo tar -xz -C /usr/local/bin nfpm
+          nfpm --version
       - name: Build package
         run: make -f packaging/Makefile package PKG_FORMAT=${{ matrix.format }} PKG_ARCH=${{ matrix.arch }} PYTHON=python3.12
       - uses: actions/upload-artifact@v4
