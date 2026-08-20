@@ -44,7 +44,7 @@ frontend: frontend/dist/index.html
 
 frontend/dist/index.html:
 	cd frontend && npm install --no-audit --no-fund && \
-	  { [ "$$(uname -m)" != "aarch64" ] || npm install --no-audit --no-fund @rollup/rollup-linux-arm64-gnu; } && \
+	  { [ "$$(uname -m)" != "aarch64" ] || npm install --no-save --no-audit --no-fund @rollup/rollup-linux-arm64-gnu; } && \
 	  npm run build
 
 # Wheels for the target platform plus pip/setuptools/wheel for the

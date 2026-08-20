@@ -1,7 +1,7 @@
 {
   "name": "openvox-gui",
   "private": true,
-  "version": "3.12.0-rc.28",
+  "version": "3.12.0-rc.29",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -14,7 +14,6 @@
     "@mantine/dropzone": "^7.17.8",
     "@mantine/hooks": "^7.17.8",
     "@mantine/notifications": "^7.17.8",
-    "@rollup/rollup-linux-arm64-gnu": "^4.62.4",
     "@tabler/icons-react": "^2.47.0",
     "@types/dagre": "^0.7.54",
     "@xyflow/react": "^12.10.2",
